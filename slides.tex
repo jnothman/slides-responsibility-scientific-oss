@@ -2,18 +2,20 @@
 
 \usepackage{amsmath}
 \usepackage{slidedefs}
+\usepackage{listings}
 
 \title{Open-Source Software's Responsibility to Science}
 \subtitle{}
 \date{20th July 2018}
 \author{Joel Nothman}
 
-\usetheme{usyd-logobar}
+\usetheme[logobar]{usyd}
 
 \titlegraphic{USYDTitle}
 \titlegraphicbackground{usydred}
 
 \newcommand{\hl}{\textcolor{usydred}}
+\newcommand{\issue}[1]{\href{https://github.com/scikit-learn/scikit-learn/issues/#1}{\##1}}
 
 \begin{document}
 
@@ -46,11 +48,15 @@
 \end{centre}
 
 \begin{points}{Thoughts on an arrogant ML researcher}
-	\p Science and engineering rely heavily on open-source \hl{infrastructure}
-	\p Scientists think software maintenance is easy
-	\p Most users are uncomfortable building their own
+	\p Scientists think software maintenance is no big deal
+	\pause
+	\p Science and engineering rely heavily on open-source infrastructure
+	\p Popular tools become de-facto standards
+	\vfill
+	\p Most users are uncomfortable building their own tools
 	\p Many will only use what's provided in a popular library
 	\p Many will not inspect how it works on the inside
+	\vfill
 	\p Volunteer maintainers act as gatekeepers
 \end{points}
 
@@ -60,10 +66,238 @@
 	\p decides how to \hl{name} or describe the algorithm
 	\p decides whether to be \hl{faithful} to a published description
 	\p decides on an \hl{API} that may facilitate good science/engineering
+	\\
+	\pause
+	\vspace{2em}
+	\hl{\bf OSS maintainers can enable or inhibit scientific best practices}
 \end{points}
 
+\begin{centre}{But you can't blame the gatekeeper}
+	\begin{quote}
+	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \textbf{``AS IS''}
+	AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+	IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+	ARE DISCLAIMED.
+	\end{quote}
+\end{centre}
+
+
+% TODO Talk about risks?
+
 \begin{points}{Outline}
-	\p blah
+	\p there's not a great deal of NLP in here \\
+	but there's a lot of ML in NLP, so I hope most of it is relevant, interesting and accessible
+	\p some of are solved problems, some are unsolved (WIP?)
 \end{points}
+
+
+% TODO: introduce multiclass, multi-label
+% TODO: introduce feature representations..?
+
+\section{Names}
+
+% https://github.com/scikit-learn/scikit-learn/issues/9993
+\begin{points}{A simple example of a bad name}
+	\p \verb|sklearn.covariance.GraphLasso| for sparse inverse covariance estimation
+	\p but \emph{Graph Lasso} is sparse \emph{regression} where the features lie on a graph
+	\p the paper for covariance estimation named it \emph{Graphical Lasso}
+	\pause
+	\p[Solution] deprecate \verb|GraphLasso| and rename it \verb|GraphicalLasso|
+\end{points}
+
+\begin{points}{Tripping over hidden parameters}
+	\p 
+\verb|precision_score(['a','a','b','b','c'], ['a','b','b','c','c'])|
+	\p For multi-class or multi-label, how should you average across classes?
+	\begin{itemize}
+\p $P_a = \frac{1}{1}$, $P_b = \frac{1}{2}$, $P_c = \frac{1}{2}$
+\p average='micro' $\Rightarrow$ $\frac{3}{5}$
+\p average='macro' $\Rightarrow$ $(1 + \frac{1}{2} + \frac{1}{2}) / 3 = \frac{2}{3}$
+\p average='weighted' $\Rightarrow$ $(2\times1 + 2\times\frac{1}{2} + 1\times\frac{1}{2}) / 5 = \frac{7}{10}$
+	\end{itemize}
+	\p for a long time, prevalence-weighted macro average was the default
+	\begin{itemize}
+	\p[$\therefore$] papers say ``We achieved a precision of \dots''
+	\end{itemize}
+	\pause
+\p[Solution] \verb|precision_score| raises an error if the data is not binary,\\
+unless the user specifies \verb|average|. \pause\\ \hfill \textbf{\hl{Use the API to force literacy \& awareness}}
+\end{points}
+
+\begin{points}{API convenience leads to imnappropriate names}
+	\p \verb|OneVsRestClassifier| does OvR:\\
+	naively turns a multiclass problem into a series of binary classifications
+	\p It also does \emph{binary relevance}:\\
+	naively turns a multilabel problem into a series of binary classifications
+	\p It chooses which mode depending on the shape of the input
+	\p Convenient, but eventually the ambiguity creates problems
+	\pause
+	\p[Unsolved]
+\end{points}
+
+\begin{points}{Correctness is relative}
+	\p What makes an implementation of some named algorithm \hl{correct}?
+	\p Faithfulness to a published research paper
+	\p Faithfulness to a reference implementation
+	\p Faithfulness to \emph{some} community of practice
+	\p Faithfulness to previous versions of our software library
+	\p Consistent with other components of the library
+\end{points}
+
+\section{Surprises}
+
+\begin{centre}{Oops}
+	Scientists report sub-optimal results\\
+	because they assume our implementation is nicely behaved
+\end{centre}
+
+% Hidden surprises
+%  - macro-average of only training set classes ????
+\begin{points}{The words you didn't mean to stop}
+	\p \verb|CountVectorizer| turns text into a term-document matrix
+	\p can choose stop words: None, 'english' or BYO
+	\p 'english' will remove \emph{system} (and used to remove \emph{computer})
+	\p 'english' will remove \emph{five}, \emph{six}, \emph{eight} but not \emph{seven}
+	\p 'english' will remove \emph{we have} but treat \emph{we've} as \emph{ve}
+	\p This is documented nowhere.
+	\p See my NLP-OSS paper with Qin Hanmin and Roman Yurchak
+	\pause
+	\p[Solution] Deprecate 'english' 
+	\pause and add another \hl{perfect} stop list \ldots
+\end{points}
+
+\begin{points}{The intercept you didn't mean to regularise}
+	\p In Logistic Regression, we learn a weight vector $\mathbf{\beta}$
+	\p and a bias term $\beta_0$ which corresponds to a feature $\mathbf{x}_0$ of all-1s
+	\p Regularisation: minimise $\sqrt{\sum_i \beta_i^2}$ to ensure small weights as well as small loss 
+	\p liblinear regularises $\beta_0$. You probably never want to do this.
+	\p[Sol'n 1] \verb|intercept_scaling|: also need to optimise $\mathbf{x}_0$'s fill value\\
+	\ldots but most users don't see/do this
+	\p[Sol'n 2] Implement alternative optimisers, and deprecate liblinear as default LogisticRegression solver
+\end{points}
+
+\begin{points}{The fit you thought was finished}
+	\p Many optimisations are iterative
+	\p have criteria to test if it has converged on an optimum
+	\p Predictions and inferences may be poor if parameters did not converge
+	\p[Solution] Warn if we did not detect convergence \\
+	but if we have too many warnings, users ignore them
+\end{points}
+
+\section{Sensibility}
+
+\begin{points}{Most users are lazy}
+	% TODO image of stack overflow
+	\p \emph{Analysis of code on github shows that people use default parameters when they shouldn't.} according to Andy M\"uller
+	\p We try to provide sensible default parameters
+	\vfill
+	\p More generally, users don't explore alternatives
+	\p My students tend to use a \verb|CountVectorizer| even when they're counting non-words (e.g.\ synsets)
+%%%	\p[Sol'n?] Replace \verb|CountVectorizer| with a text counter to encourage use of generic \verb|DictVectorizer|
+\end{points}
+
+\begin{points}{Sensible default fail}
+	\p Ten-tree forests
+	\p Three-fold cross validation
+	\p ?? A tokeniser that splits on word-internal punctuation
+\end{points}
+
+\begin{points}{What makes a default value good?}
+	\p Good defaults should give good predictive models and reliable statistics
+	\p ? Good defaults should be what users expect
+	\begin{itemize}
+			\p but different communities of practice
+	\end{itemize}
+	\p Good defaults should be invariant to:
+	\begin{itemize}
+			\p sample size (for stability in cross validation)
+			\p number of features (for stability in model selection)
+			\p ?feature scaling (for stability in different tasks/datasets)
+	\end{itemize}
+	\p Example: a good default $\gamma$ for an RBF kernel (\issue{779}, \issue{10331})
+\end{points}
+
+\begin{points}{Good parametrisation}
+	\p We choose the defaults, but also how parameters are expressed
+	\vfill
+	\p Should percentages be indicated with 0-100 or 0-1?
+	\p Should number of neighbors be specified as:
+	\begin{itemize}
+		\p an absolute value
+		\p a proportion of training samples
+		\p an arbitrary function of training data shape
+	\end{itemize}
+	\vfill
+	\p Algorithms and optimisation research often don't report on this
+\end{points}
+
+\section{Misuse} % or breakage
+% Other peoples' examples:
+% • Providing P-values means people will misinterpret them
+% • Restricting identifiers to 30 chars (Oracle) forces users to write immemorable abbreviations
+% • Encouraging users to write neat code by the one right way to do something being clear (something numpy and pandas fail at)
+
+\subsection{Encouraging good science}
+\begin{frame}[plain]
+	\vfill
+	\begin{center}
+		\Large
+Scientific software should encourage users to do good science
+\end{center}
+	\vfill
+\end{frame}
+
+\begin{points}{I once tried to de-tokenise the Penn TreeBank}
+	\p PTB is delivered with each token POS tagged or bracketed
+	\p We wanted to know how whitespace etc.\ informed parsing
+	\p The source text before tokenisation is available
+	\p[$\Rightarrow$] alignment hell
+	\vfill
+	\p Hindsight: delivering annotations on tokenised text is a bad idea
+	\p NLP software should avoid reporting tokenised annotations
+	\p spaCy's storage of the whitespace for each token is wonderful
+\end{points}
+
+\begin{plain}{Avoiding leakage in cross validation}
+% Leakage
+%  - at some point you need to roll your own
+%  - when you roll your own you introduce errors
+%  - Making sure imputers are inductive
+	\begin{columns}\begin{column}{0.1\textwidth}Bad\end{column}\begin{column}{.9\textwidth}
+	\begin{lstlisting}[language=python]
+X_preproc = preprocessor.fit_transform(X)
+result = cross_validate(classifier, X_preproc, y)
+	\end{lstlisting}
+	\end{column}\end{columns}
+	Test data statistics leak into preprocessing $\Rightarrow$ inflated cross validation results
+	\begin{columns}\begin{column}{0.1\textwidth}Good\end{column}\begin{column}{.9\textwidth}
+	\begin{lstlisting}[language=python]
+pipeline = make_pipeline(preprocessor, classifier)
+result = cross_validate(pipeline, X, y)
+	\end{lstlisting}
+	\end{column}\end{columns}
+
+	\begin{itemize}
+			\p[Solution] de-emphasise \verb|fit_transform|\\
+			and make sure \verb|Pipeline| works with everything\\
+			and make sure \verb|cross_validate| works with everything
+	\end{itemize}
+\end{plain}
+
+% Cross_val_predict :(
+
+\section{Collaborate}
+
+\begin{points}{Maintainers need feedback from scientists}
+	\p Maintainers often can't be experts in all the things they maintain
+\end{points}
+% Scientists helping out
+%  - reporting issues
+%     - not just errors or wishes
+%  - helping to develop MICEImputer
+%  - maintainers help by setting a standard of quality assurance
+
+
+% Related work: The Architecture of Open Source Applications: http://aosabook.org/en/index.html
 
 \end{document}
