@@ -17,11 +17,16 @@
 \newcommand{\hl}{\textcolor{usydred}}
 \newcommand{\issue}[1]{\href{https://github.com/scikit-learn/scikit-learn/issues/#1}{\##1}}
 
+\newenvironment{sectionslide}
+			{\subsection*{+}\begin{frame}[fragile,environment=sectionslide]\vfill\begin{center}\Large}
+			{\end{center}\vfill\end{frame}}
+
+
 \begin{document}
 
 \titleslide
 
-\section{Gatekeeper}
+\section{Gatekeepers}
 
 \begin{points}{Me in open source}
 	\p Mostly contributed to popular Scientific Python libraries:\\
@@ -36,7 +41,7 @@
 \end{points}
 
 \begin{centre}{Overheard at ICML}
-	\begin{quote}
+	\parbox{\textwidth}{
 		\Large
 		\it
 	Don't worry about how tricky it is to implement \ldots
@@ -44,7 +49,7 @@
 	\vspace{2em}
 
 	\raggedleft Someone will put it in Scikit-learn and you can just use it.
-	\end{quote}
+	}
 \end{centre}
 
 \begin{points}{Thoughts on an arrogant ML researcher}
@@ -84,17 +89,45 @@
 
 % TODO Talk about risks?
 
-\begin{points}{Outline}
-	\p there's not a great deal of NLP in here \\
-	but there's a lot of ML in NLP, so I hope most of it is relevant, interesting and accessible
-	\p some of are solved problems, some are unsolved (WIP?)
+\begin{points}{This presentation is a series of examples}
+	\p Risks to good science and engineering related to software design
+	\vfill
+	\p There's not a great deal of NLP in here \\
+	but there's a lot of ML and software engineering in NLP\\
+	(so I hope it is relevant, interesting and accessible)
+	\vfill
+	\p Some things we do to help science
+	\p Some things we have changed to help science
+	\p Some things we have yet to solve
 \end{points}
 
+
+\begin{points}{Scikit-learn preliminaries}
+	\p An ecosystem of estimators
+	\p Fit an estimator on some data, so that it can:
+	\begin{itemize}
+		\p describe the training data
+		\p transform unseen data
+		\p predict a target for unseen data
+	\end{itemize}
+	\p Data is usually a numeric matrix \verb|X| (samples $\times$ features)
+	\p May provide a target vector or matrix \verb|y| at training time
+	\begin{itemize}
+		\p continuous valued for regression
+		\p categories for multiclass classification
+		\p multiple columns of binary targets for multilabel classification
+	\end{itemize}
+\end{points}
 
 % TODO: introduce multiclass, multi-label
 % TODO: introduce feature representations..?
 
 \section{Names}
+
+\begin{sectionslide}
+	Methods and results and are indecipherable if researchers publish an inappropriate, or underspecified, algorithm name
+\end{sectionslide}
+
 
 % https://github.com/scikit-learn/scikit-learn/issues/9993
 \begin{points}{A simple example of a bad name}
@@ -124,7 +157,8 @@
 unless the user specifies \verb|average|. \pause\\ \hfill \textbf{\hl{Use the API to force literacy \& awareness}}
 \end{points}
 
-\begin{points}{API convenience leads to imnappropriate names}
+\iffalse
+\begin{points}{API convenience leads to inappropriate names}
 	\p \verb|OneVsRestClassifier| does OvR:\\
 	naively turns a multiclass problem into a series of binary classifications
 	\p It also does \emph{binary relevance}:\\
@@ -134,22 +168,24 @@ unless the user specifies \verb|average|. \pause\\ \hfill \textbf{\hl{Use the AP
 	\pause
 	\p[Unsolved]
 \end{points}
+\fi
 
 \begin{points}{Correctness is relative}
 	\p What makes an implementation of some named algorithm \hl{correct}?
-	\p Faithfulness to a published research paper
-	\p Faithfulness to a reference implementation
-	\p Faithfulness to \emph{some} community of practice
-	\p Faithfulness to previous versions of our software library
-	\p Consistent with other components of the library
+	\vfill
+	\p Faithful to a published research paper?
+	\p Faithful to a reference implementation?
+	\p Faithful to \emph{some} community of practice?
+	\p Consistent with other components of our software library?
+	\p Consistent with previous versions of the library?
 \end{points}
 
 \section{Surprises}
 
-\begin{centre}{Oops}
-	Scientists report sub-optimal results\\
+\begin{sectionslide}
+	Experimenters report sub-optimal results\\
 	because they assume our implementation is nicely behaved
-\end{centre}
+\end{sectionslide}
 
 % Hidden surprises
 %  - macro-average of only training set classes ????
@@ -171,7 +207,9 @@ unless the user specifies \verb|average|. \pause\\ \hfill \textbf{\hl{Use the AP
 	\p and a bias term $\beta_0$ which corresponds to a feature $\mathbf{x}_0$ of all-1s
 	\p Regularisation: minimise $\sqrt{\sum_i \beta_i^2}$ to ensure small weights as well as small loss 
 	\p liblinear regularises $\beta_0$. You probably never want to do this.
+	\pause
 	\p[Sol'n 1] \verb|intercept_scaling|: also need to optimise $\mathbf{x}_0$'s fill value\\
+	\pause
 	\ldots but most users don't see/do this
 	\p[Sol'n 2] Implement alternative optimisers, and deprecate liblinear as default LogisticRegression solver
 \end{points}
@@ -186,15 +224,28 @@ unless the user specifies \verb|average|. \pause\\ \hfill \textbf{\hl{Use the AP
 
 \section{Sensibility}
 
-\begin{points}{Most users are lazy}
-	% TODO image of stack overflow
-	\p \emph{Analysis of code on github shows that people use default parameters when they shouldn't.} according to Andy M\"uller
-	\p We try to provide sensible default parameters
-	\vfill
+\begin{sectionslide}
+	\emph{Analysis of code on GitHub shows that people use default parameters when they shouldn't} \\
+	\raggedleft Andreas M\"uller
+\end{sectionslide}
+
+\begin{plain}{Most users are lazy}
+	\begin{columns}\begin{column}{.65\textwidth}
+		\vspace{-2em}
+	\begin{itemize}
 	\p More generally, users don't explore alternatives
 	\p My students tend to use a \verb|CountVectorizer| even when they're counting non-words (e.g.\ synsets)
 %%%	\p[Sol'n?] Replace \verb|CountVectorizer| with a text counter to encourage use of generic \verb|DictVectorizer|
-\end{points}
+	\p We try to provide sensible default parameters
+	\vfill
+	\end{itemize}
+\end{column}
+\begin{column}{.39\textwidth}
+	\vspace*{-36pt}
+	\fbox{\includegraphics[width=\columnwidth]{fig/stackoverflow}}
+\end{column}
+\end{columns}
+\end{plain}
 
 \begin{points}{Sensible default fail}
 	\p Ten-tree forests
@@ -220,12 +271,11 @@ unless the user specifies \verb|average|. \pause\\ \hfill \textbf{\hl{Use the AP
 \begin{points}{Good parametrisation}
 	\p We choose the defaults, but also how parameters are expressed
 	\vfill
-	\p Should percentages be indicated with 0-100 or 0-1?
 	\p Should number of neighbors be specified as:
 	\begin{itemize}
-		\p an absolute value
-		\p a proportion of training samples
-		\p an arbitrary function of training data shape
+		\p an absolute value (e.g.\ 10)?
+		\p a proportion of training samples (e.g.\ 2\%)?
+		\p an arbitrary function of training data shape?
 	\end{itemize}
 	\vfill
 	\p Algorithms and optimisation research often don't report on this
@@ -237,25 +287,19 @@ unless the user specifies \verb|average|. \pause\\ \hfill \textbf{\hl{Use the AP
 % • Restricting identifiers to 30 chars (Oracle) forces users to write immemorable abbreviations
 % • Encouraging users to write neat code by the one right way to do something being clear (something numpy and pandas fail at)
 
-\subsection{Encouraging good science}
-\begin{frame}[plain]
-	\vfill
-	\begin{center}
-		\Large
+\begin{sectionslide}
 Scientific software should encourage users to do good science
-\end{center}
-	\vfill
-\end{frame}
+\end{sectionslide}
 
 \begin{points}{I once tried to de-tokenise the Penn TreeBank}
 	\p PTB is delivered with each token POS tagged or bracketed
-	\p We wanted to know how whitespace etc.\ informed parsing
+	\p We wanted to know how paragraph structure, etc.\ informed parsing
 	\p The source text before tokenisation is available
 	\p[$\Rightarrow$] alignment hell
 	\vfill
 	\p Hindsight: delivering annotations on tokenised text is a bad idea
-	\p NLP software should avoid reporting tokenised annotations
-	\p spaCy's storage of the whitespace for each token is wonderful
+	\p NLP software should always provide stand-off markup
+	\p Or store the whitespace/non-token data as spaCy does
 \end{points}
 
 \begin{plain}{Avoiding leakage in cross validation}
@@ -263,20 +307,22 @@ Scientific software should encourage users to do good science
 %  - at some point you need to roll your own
 %  - when you roll your own you introduce errors
 %  - Making sure imputers are inductive
-	\begin{columns}\begin{column}{0.1\textwidth}Bad\end{column}\begin{column}{.9\textwidth}
-	\begin{lstlisting}[language=python]
-X_preproc = preprocessor.fit_transform(X)
-result = cross_validate(classifier, X_preproc, y)
-	\end{lstlisting}
+	\begin{columns}[t]\begin{column}{0.1\textwidth}Bad\end{column}\begin{column}{.9\textwidth}
+\verb|X_preprocessed = preprocessor.fit_transform(X)|\\
+\verb|result = cross_validate(classifier, X_preprocessed, y)|
+
+	\vspace{1em}
+Test data statistics \hl{leak} into preprocessing\\
+	$\Rightarrow$ inflated cross validation results
 	\end{column}\end{columns}
-	Test data statistics leak into preprocessing $\Rightarrow$ inflated cross validation results
-	\begin{columns}\begin{column}{0.1\textwidth}Good\end{column}\begin{column}{.9\textwidth}
-	\begin{lstlisting}[language=python]
-pipeline = make_pipeline(preprocessor, classifier)
-result = cross_validate(pipeline, X, y)
-	\end{lstlisting}
+	\vspace{1em}
+
+	\begin{columns}[t]\begin{column}{0.1\textwidth}Good\end{column}\begin{column}{.9\textwidth}
+\verb|pipeline = make_pipeline(preprocessor, classifier)|\\
+\verb|result = cross_validate(pipeline, X, y)|
 	\end{column}\end{columns}
 
+	\vfill
 	\begin{itemize}
 			\p[Solution] de-emphasise \verb|fit_transform|\\
 			and make sure \verb|Pipeline| works with everything\\
@@ -288,8 +334,20 @@ result = cross_validate(pipeline, X, y)
 
 \section{Collaborate}
 
-\begin{points}{Maintainers need feedback from scientists}
-	\p Maintainers often can't be experts in all the things they maintain
+{%
+\setbeamertemplate{background}{\parbox{\paperwidth}{\vspace{2mm}\raggedleft\includegraphics[height=\paperheight]{fig/unicorn-2007266_1280}}}
+%%%\begin{points}{Maintainers need feedback from scientists}
+\begin{sectionslide}
+	Maintainers of large projects\\can't be experts in \emph{all} the things they maintain
+\end{sectionslide}
+%%%\end{points}
+}
+
+\begin{points}{Scientists can (and do) help us}
+	\p Make sure the implementation matches the name
+	\p Make users aware of or avoid unexpected behaviour
+	\p Parametrise algorithms and set defaults helpfully
+	\p Understand how our design choices lead to flawed experiments
 \end{points}
 % Scientists helping out
 %  - reporting issues
