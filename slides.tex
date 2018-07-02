@@ -6,7 +6,7 @@
 
 \title{Open-Source Software's Responsibility to Science}
 \subtitle{}
-\date{20th July 2018}
+%%%\date{20th July 2018}
 \author{Joel Nothman}
 
 \usetheme[logobar]{usyd}
@@ -55,6 +55,7 @@
 \begin{points}{Thoughts on an arrogant ML researcher}
 	\p Scientists think software maintenance is no big deal
 	\pause
+	\vfill
 	\p Science and engineering rely heavily on open-source infrastructure
 	\p Popular tools become de-facto standards
 	\vfill
@@ -92,13 +93,13 @@
 \begin{points}{This presentation is a series of examples}
 	\p Risks to good science and engineering related to software design
 	\vfill
-	\p There's not a great deal of NLP in here \\
-	but there's a lot of ML and software engineering in NLP\\
-	(so I hope it is relevant, interesting and accessible)
-	\vfill
 	\p Some things we do to help science
 	\p Some things we have changed to help science
 	\p Some things we have yet to solve
+	\vfill
+	\p There's not a great deal of NLP in here \\
+	but there's a lot of ML and software engineering in NLP\\
+	(so I hope it is relevant, interesting and accessible)
 \end{points}
 
 
@@ -154,7 +155,7 @@
 	\end{itemize}
 	\pause
 \p[Solution] \verb|precision_score| raises an error if the data is not binary,\\
-unless the user specifies \verb|average|. \pause\\ \hfill \textbf{\hl{Use the API to force literacy \& awareness}}
+unless the user specifies \verb|average|. \\ \hfill \textbf{\hl{Use the API to force literacy \& awareness}}
 \end{points}
 
 \iffalse
@@ -187,18 +188,26 @@ unless the user specifies \verb|average|. \pause\\ \hfill \textbf{\hl{Use the AP
 	because they assume our implementation is nicely behaved
 \end{sectionslide}
 
+\begin{points}{The fit you thought was finished}
+	\p Many optimisations are iterative
+	\p have criteria to test if it has converged on an optimum
+	\p Predictions and inferences may be poor if parameters did not converge
+	\p[Solution] Warn if we did not detect convergence \\
+	but if we have too many warnings, users ignore them\ldots
+\end{points}
+
 % Hidden surprises
 %  - macro-average of only training set classes ????
 \begin{points}{The words you didn't mean to stop}
 	\p \verb|CountVectorizer| turns text into a term-document matrix
-	\p can choose stop words: None, 'english' or BYO
-	\p 'english' will remove \emph{system} (and used to remove \emph{computer})
-	\p 'english' will remove \emph{five}, \emph{six}, \emph{eight} but not \emph{seven}
-	\p 'english' will remove \emph{we have} but treat \emph{we've} as \emph{ve}
+	\p can choose stop words: None, `english' or BYO
+	\p `english' will remove \emph{system} (and used to remove \emph{computer})
+	\p `english' will remove \emph{five}, \emph{six}, \emph{eight} but not \emph{seven}
+	\p `english' will remove \emph{we have} but treat \emph{we've} as \emph{ve}
 	\p This is documented nowhere.
 	\p See my NLP-OSS paper with Qin Hanmin and Roman Yurchak
 	\pause
-	\p[Solution] Deprecate 'english' 
+	\p[Solution] Deprecate `english' 
 	\pause and add another \hl{perfect} stop list \ldots
 \end{points}
 
@@ -207,19 +216,12 @@ unless the user specifies \verb|average|. \pause\\ \hfill \textbf{\hl{Use the AP
 	\p and a bias term $\beta_0$ which corresponds to a feature $\mathbf{x}_0$ of all-1s
 	\p Regularisation: minimise $\sqrt{\sum_i \beta_i^2}$ to ensure small weights as well as small loss 
 	\p liblinear regularises $\beta_0$. You probably never want to do this.
+	\p All our other linear estimators do not regularise the intercept.
 	\pause
 	\p[Sol'n 1] \verb|intercept_scaling|: also need to optimise $\mathbf{x}_0$'s fill value\\
 	\pause
 	\ldots but most users don't see/do this
 	\p[Sol'n 2] Implement alternative optimisers, and deprecate liblinear as default LogisticRegression solver
-\end{points}
-
-\begin{points}{The fit you thought was finished}
-	\p Many optimisations are iterative
-	\p have criteria to test if it has converged on an optimum
-	\p Predictions and inferences may be poor if parameters did not converge
-	\p[Solution] Warn if we did not detect convergence \\
-	but if we have too many warnings, users ignore them
 \end{points}
 
 \section{Sensibility}
@@ -255,7 +257,7 @@ unless the user specifies \verb|average|. \pause\\ \hfill \textbf{\hl{Use the AP
 
 \begin{points}{What makes a default value good?}
 	\p Good defaults should give good predictive models and reliable statistics
-	\p ? Good defaults should be what users expect
+	\p ? Good defaults should behave how users expect
 	\begin{itemize}
 			\p but different communities of practice
 	\end{itemize}
@@ -265,13 +267,14 @@ unless the user specifies \verb|average|. \pause\\ \hfill \textbf{\hl{Use the AP
 			\p number of features (for stability in model selection)
 			\p ?feature scaling (for stability in different tasks/datasets)
 	\end{itemize}
-	\p Example: a good default $\gamma$ for an RBF kernel (\issue{779}, \issue{10331})
+	\p Example:	finding a good default $\gamma$ for an RBF kernel (\issue{779}, \issue{10331})
+	% TODO: the scaling of regularization coefficients might be more relevant, but is hard to express: https://github.com/scikit-learn/scikit-learn/issues/10164
 \end{points}
 
 \begin{points}{Good parametrisation}
 	\p We choose the defaults, but also how parameters are expressed
 	\vfill
-	\p Should number of neighbors be specified as:
+	\p Should number of nearest neighbors be specified as:
 	\begin{itemize}
 		\p an absolute value (e.g.\ 10)?
 		\p a proportion of training samples (e.g.\ 2\%)?
@@ -281,23 +284,27 @@ unless the user specifies \verb|average|. \pause\\ \hfill \textbf{\hl{Use the AP
 	\p Algorithms and optimisation research often don't report on this
 \end{points}
 
+% FIXME: find a better title
 \section{Misuse} % or breakage
+
 % Other peoples' examples:
 % • Providing P-values means people will misinterpret them
 % • Restricting identifiers to 30 chars (Oracle) forces users to write immemorable abbreviations
 % • Encouraging users to write neat code by the one right way to do something being clear (something numpy and pandas fail at)
 
 \begin{sectionslide}
-Scientific software should encourage users to do good science
+Scientific software should make it easy for users to do good science.
 \end{sectionslide}
+% By misuse I don't mean dishonesty
 
 \begin{points}{I once tried to de-tokenise the Penn TreeBank}
 	\p PTB is delivered with each token POS tagged or bracketed
 	\p We wanted to know how paragraph structure, etc.\ informed parsing
-	\p The source text before tokenisation is available
+	\p The source text before tokenisation \emph{is} available, but
 	\p[$\Rightarrow$] alignment hell
 	\vfill
 	\p Hindsight: delivering annotations on tokenised text is a bad idea
+	\p It restricts what you can do with it later
 	\p NLP software should always provide stand-off markup
 	\p Or store the whitespace/non-token data as spaCy does
 \end{points}
@@ -323,10 +330,11 @@ Test data statistics \hl{leak} into preprocessing\\
 	\end{column}\end{columns}
 
 	\vfill
+	\pause
 	\begin{itemize}
-			\p[Solution] de-emphasise \verb|fit_transform|\\
-			and make sure \verb|Pipeline| works with everything\\
-			and make sure \verb|cross_validate| works with everything
+			\p[Solution] De-emphasise \verb|fit_transform|.\\
+			And make sure \verb|Pipeline| works with everything;\\
+			and make sure \verb|cross_validate| works with everything.
 	\end{itemize}
 \end{plain}
 
