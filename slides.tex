@@ -6,15 +6,16 @@
 
 \title{Open-Source Software's Responsibility to Science}
 \subtitle{}
-%%%\date{20th July 2018}
+\date{20th July 2018}
 \author{Joel Nothman}
 
 \usetheme[logobar]{usyd}
 
-\titlegraphic{USYDTitle}
+\titlegraphic{fig/title-slide}
 \titlegraphicbackground{usydred}
 
 \newcommand{\hl}{\textcolor{usydred}}
+\newcommand{\ex}{\textcolor{usydblue}}
 \newcommand{\issue}[1]{\href{https://github.com/scikit-learn/scikit-learn/issues/#1}{\##1}}
 
 \newenvironment{sectionslide}
@@ -35,6 +36,7 @@
 	\vfill
 	\p Community service
 	\p ``Volunteer software development''
+	\p With thanks to our financial sponsors
 	\vfill
 	\p Caretakers aren't always founders
 	\p Founders aren't always caretakers
@@ -114,7 +116,7 @@
 	\p Data is usually a numeric matrix \verb|X| (samples $\times$ features)
 	\p May provide a target vector or matrix \verb|y| at training time
 	\begin{itemize}
-		\p continuous valued for regression
+		\p real valued for regression
 		\p categories for multiclass classification
 		\p multiple columns of binary targets for multilabel classification
 	\end{itemize}
@@ -205,7 +207,7 @@ unless the user specifies \verb|average|. \\ \hfill \textbf{\hl{Use the API to f
 	\p `english' will remove \emph{five}, \emph{six}, \emph{eight} but not \emph{seven}
 	\p `english' will remove \emph{we have} but treat \emph{we've} as \emph{ve}
 	\p This is documented nowhere.
-	\p See my NLP-OSS paper with Qin Hanmin and Roman Yurchak
+	\p See my NLP-OSS paper with Hanmin Qin and Roman Yurchak
 	\pause
 	\p[Solution] Deprecate `english' 
 	\pause and add another \hl{perfect} stop list \ldots
@@ -232,18 +234,22 @@ unless the user specifies \verb|average|. \\ \hfill \textbf{\hl{Use the API to f
 \end{sectionslide}
 
 \begin{plain}{Most users are lazy}
-	\begin{columns}\begin{column}{.65\textwidth}
+	\begin{columns}[t]\begin{column}{.65\textwidth}
 		\vspace{-2em}
 	\begin{itemize}
-	\p More generally, users don't explore alternatives
+	\p Users don't explore alternatives
+	\begin{itemize}
+		\p alternative parameters values
+		\p alternative software libraries
+	\end{itemize}
 	\p My students tend to use a \verb|CountVectorizer| even when they're counting non-words (e.g.\ synsets)
 %%%	\p[Sol'n?] Replace \verb|CountVectorizer| with a text counter to encourage use of generic \verb|DictVectorizer|
 	\p We try to provide sensible default parameters
-	\vfill
 	\end{itemize}
+	\vfill
 \end{column}
 \begin{column}{.39\textwidth}
-	\vspace*{-36pt}
+	\vspace*{-50pt}
 	\fbox{\includegraphics[width=\columnwidth]{fig/stackoverflow}}
 \end{column}
 \end{columns}
@@ -253,6 +259,9 @@ unless the user specifies \verb|average|. \\ \hfill \textbf{\hl{Use the API to f
 	\p Ten-tree forests
 	\p Three-fold cross validation
 	\p ?? A tokeniser that splits on word-internal punctuation
+%%%	\vfill
+%%%	\p Contributors come and go
+%%%	\p Sometimes we don't know why things are the way they are
 \end{points}
 
 \begin{points}{What makes a default value good?}
@@ -273,6 +282,7 @@ unless the user specifies \verb|average|. \\ \hfill \textbf{\hl{Use the API to f
 
 \begin{points}{Good parametrisation}
 	\p We choose the defaults, but also how parameters are expressed
+	\p (and whether they can be changed at all)
 	\vfill
 	\p Should number of nearest neighbors be specified as:
 	\begin{itemize}
@@ -285,7 +295,7 @@ unless the user specifies \verb|average|. \\ \hfill \textbf{\hl{Use the API to f
 \end{points}
 
 % FIXME: find a better title
-\section{Misuse} % or breakage
+\section{Misdirection} % or breakage
 
 % Other peoples' examples:
 % • Providing P-values means people will misinterpret them
@@ -297,17 +307,53 @@ Scientific software should make it easy for users to do good science.
 \end{sectionslide}
 % By misuse I don't mean dishonesty
 
-\begin{points}{I once tried to de-tokenise the Penn TreeBank}
+\begin{plain}{Have you ever tried to de-tokenise the Penn TreeBank?}
+	\begin{itemize}
 	\p PTB is delivered with each token POS tagged or bracketed
 	\p We wanted to know how paragraph structure, etc.\ informed parsing
-	\p The source text before tokenisation \emph{is} available, but
-	\p[$\Rightarrow$] alignment hell
+	\p The source text before tokenisation is available
+	\p An easy case:
+	\end{itemize}
+	% XXX: had trouble using \only, so implementing it manually
+	\begin{columns}\hspace{.05\textwidth}\begin{column}{.3\textwidth}
+		{		\color{usydblue}
+\verb|[ Imports/NNS ]|\\
+\verb|were/VBD at/IN|\\
+\verb|[ $/$ 50.38/CD billion/CD ]|\\
+\verb|,/, up/RB|\\
+\verb|[ 19/CD %/NN ]|\\
+\verb|./.|}
+\end{column}
+%%%\begin{column}{.05\textwidth}\begin{center}to\end{center}\end{column}
+	\begin{column}{.3\textwidth}
+		\ex{Imports were at \$50.38 billion, up 19\%.}\\
+		\vspace*{1em}
+	{\small
+	\begin{tabular}{ll}
+		Imports & 1--7 \\
+		were & 9--12 \\
+		at & 14--15 \\
+		\$ & 16--16 \\
+		50.38 & 17--21 \\
+	\end{tabular}
+	}
+\end{column}\end{columns}
+\end{plain}
+
+\begin{frame}\frametitle{Have you ever tried to de-tokenise the Penn TreeBank?}
+\newcommand\p\item
+	\begin{itemize}
+	\p PTB is delivered with each token POS tagged or bracketed
+	\p We wanted to know how paragraph structure, etc.\ informed parsing
+	\p The source text before tokenisation is available
+	\p[$\Rightarrow$] \hl{alignment hell} due to typos corrected/inserted, reorderings, missed text, etc.
 	\vfill
 	\p Hindsight: delivering annotations on tokenised text is a bad idea
 	\p It restricts what you can do with it later
 	\p NLP software should always provide stand-off markup
 	\p Or store the whitespace/non-token data as spaCy does
-\end{points}
+	\end{itemize}
+\end{frame}
 
 \begin{plain}{Avoiding leakage in cross validation}
 % Leakage
@@ -351,11 +397,14 @@ Test data statistics \hl{leak} into preprocessing\\
 %%%\end{points}
 }
 
-\begin{points}{Scientists can (and do) help us}
-	\p Make sure the implementation matches the name
-	\p Make users aware of or avoid unexpected behaviour
-	\p Parametrise algorithms and set defaults helpfully
-	\p Understand how our design choices lead to flawed experiments
+\begin{points}{Scientists can (and do) help us:}
+	\p make sure the implementation matches the name
+	\p make users aware of or avoid unexpected behaviour
+	\p parametrise algorithms and set defaults helpfully
+	\p understand how our design choices lead to flawed experiments
+	\vfill
+	\raggedleft
+	\hl{\bf Thank you for helping us get it right.}
 \end{points}
 % Scientists helping out
 %  - reporting issues
