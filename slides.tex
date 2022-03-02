@@ -143,7 +143,7 @@
 
 \begin{points}{Tripping over hidden parameters}
 	\p 
-\verb|precision_score(['a','a','b','b','c'], ['a','b','b','c','c'])|
+\verb|precision_score([`a',`a',`b',`b',`c'], [`a',`b',`b',`c',`c'])|
 	\p For multi-class or multi-label, how should you average across classes?
 	\begin{itemize}
 \p $P_a = \frac{1}{1}$, $P_b = \frac{1}{2}$, $P_c = \frac{1}{2}$
@@ -173,7 +173,7 @@ unless the user specifies \verb|average|. \\ \hfill \textbf{\hl{Use the API to f
 \end{points}
 \fi
 
-\begin{points}{Correctness is relative}
+\begin{points}{What's in a name?}
 	\p What makes an implementation of some named algorithm \hl{correct}?
 	\vfill
 	\p Faithful to a published research paper?
@@ -194,6 +194,7 @@ unless the user specifies \verb|average|. \\ \hfill \textbf{\hl{Use the API to f
 	\p Many optimisations are iterative
 	\p have criteria to test if it has converged on an optimum
 	\p Predictions and inferences may be poor if parameters did not converge
+	\pause
 	\p[Solution] Warn if we did not detect convergence \\
 	but if we have too many warnings, users ignore them\ldots
 \end{points}
@@ -404,7 +405,8 @@ Test data statistics \hl{leak} into preprocessing\\
 	\p understand how our design choices lead to flawed experiments
 	\vfill
 	\raggedleft
-	\hl{\bf Thank you for helping us get it right.}
+	\hl{\bf Users trust popular OSS.}\\
+	\hl{\bf Thank you for helping us make OSS trustworthy.}
 \end{points}
 % Scientists helping out
 %  - reporting issues
