@@ -6,13 +6,22 @@
 
 \title{Open-Source Software's Responsibility to Science}
 \subtitle{}
-\date{20th July 2018}
+\date{15th October 2020}
 \author{Joel Nothman}
 
 \usetheme[logobar]{usyd}
 
 \titlegraphic{fig/title-slide}
 \titlegraphicbackground{usydred}
+\setbeamertemplate{logo titlepage}{%
+\hspace{3.3cm}
+\parbox{6.5cm}{%
+\begin{tabular}{p{3.5cm} p{3cm}}
+	\vspace{0pt} \includegraphics[width=3.5cm]{fig/scikit-learn-logo-crop} &
+	\vspace{0pt} \includegraphics[width=3cm]{fig/sih-logo.eps}
+\end{tabular}
+}%
+}
 
 \newcommand{\hl}{\textcolor{usydred}}
 \newcommand{\ex}{\textcolor{usydblue}}
@@ -32,7 +41,7 @@
 \begin{points}{Me in open source}
 	\p Mostly contributed to popular Scientific Python libraries:\\
 	scikit-learn, nltk, scipy.sparse, pandas, ipython, numpydoc
-	\p Also information extraction evaluation (neleval), etc.
+	\p Also upsetplot, searchgrid, NLP evaluation (neleval), etc.
 	\vfill
 	\p Community service
 	\p ``Volunteer software development''
@@ -98,29 +107,33 @@
 	\p Some things we do to help science
 	\p Some things we have changed to help science
 	\p Some things we have yet to solve
-	\vfill
-	\p There's not a great deal of NLP in here \\
-	but there's a lot of ML and software engineering in NLP\\
-	(so I hope it is relevant, interesting and accessible)
 \end{points}
 
 
-\begin{points}{Scikit-learn preliminaries}
+\begin{plain}{Scikit-learn preliminaries}
+	\begin{columns}[t]\begin{column}{.39\textwidth}
+		\vspace*{-3.5em}
+		\hspace*{1em}\includegraphics[width=\columnwidth]{fig/collection-of-estimators}
+	\end{column}\begin{column}{.6\textwidth}
+		\vspace*{-1.5em}
+	\begin{itemize}
 	\p An ecosystem of estimators
-	\p Fit an estimator on some data, so that it can:
+	\p Fit an estimator on data, so it can:
 	\begin{itemize}
 		\p describe the training data
 		\p transform unseen data
 		\p predict a target for unseen data
 	\end{itemize}
-	\p Data is usually a numeric matrix \verb|X| (samples $\times$ features)
+	\p Data is usually a numeric matrix \verb|X|\\ (samples $\times$ features)
 	\p May provide a target vector or matrix \verb|y| at training time
 	\begin{itemize}
 		\p real valued for regression
 		\p categories for multiclass classification
-		\p multiple columns of binary targets for multilabel classification
+		\p columns of binary targets for multilabel
 	\end{itemize}
-\end{points}
+	\end{itemize}
+	\end{column}\end{columns}
+\end{plain}
 
 % TODO: introduce multiclass, multi-label
 % TODO: introduce feature representations..?
@@ -210,8 +223,8 @@ unless the user specifies \verb|average|. \\ \hfill \textbf{\hl{Use the API to f
 	\p This is documented nowhere.
 	\p See my NLP-OSS paper with Hanmin Qin and Roman Yurchak
 	\pause
-	\p[Solution] Deprecate `english' 
-	\pause and add another \hl{perfect} stop list \ldots
+	\p[Solution] Replace `english' with the \hl{perfect} stop list?\\
+	\pause \dots no, just document our concerns.
 \end{points}
 
 \begin{points}{The intercept you didn't mean to regularise}
@@ -243,7 +256,7 @@ unless the user specifies \verb|average|. \\ \hfill \textbf{\hl{Use the API to f
 		\p alternative parameters values
 		\p alternative software libraries
 	\end{itemize}
-	\p My students tend to use a \verb|CountVectorizer| even when they're counting non-words (e.g.\ synsets)
+	\p My students would use a \verb|CountVectorizer| even when counting non-words (e.g.\ POS tags)
 %%%	\p[Sol'n?] Replace \verb|CountVectorizer| with a text counter to encourage use of generic \verb|DictVectorizer|
 	\p We try to provide sensible default parameters
 	\end{itemize}
@@ -308,53 +321,53 @@ Scientific software should make it easy for users to do good science.
 \end{sectionslide}
 % By misuse I don't mean dishonesty
 
-\begin{plain}{Have you ever tried to de-tokenise the Penn TreeBank?}
-	\begin{itemize}
-	\p PTB is delivered with each token POS tagged or bracketed
-	\p We wanted to know how paragraph structure, etc.\ informed parsing
-	\p The source text before tokenisation is available
-	\p An easy case:
-	\end{itemize}
-	% XXX: had trouble using \only, so implementing it manually
-	\begin{columns}\hspace{.05\textwidth}\begin{column}{.3\textwidth}
-		{		\color{usydblue}
-\verb|[ Imports/NNS ]|\\
-\verb|were/VBD at/IN|\\
-\verb|[ $/$ 50.38/CD billion/CD ]|\\
-\verb|,/, up/RB|\\
-\verb|[ 19/CD %/NN ]|\\
-\verb|./.|}
-\end{column}
-%%%\begin{column}{.05\textwidth}\begin{center}to\end{center}\end{column}
-	\begin{column}{.3\textwidth}
-		\ex{Imports were at \$50.38 billion, up 19\%.}\\
-		\vspace*{1em}
-	{\small
-	\begin{tabular}{ll}
-		Imports & 1--7 \\
-		were & 9--12 \\
-		at & 14--15 \\
-		\$ & 16--16 \\
-		50.38 & 17--21 \\
-	\end{tabular}
-	}
-\end{column}\end{columns}
-\end{plain}
-
-\begin{frame}\frametitle{Have you ever tried to de-tokenise the Penn TreeBank?}
-\newcommand\p\item
-	\begin{itemize}
-	\p PTB is delivered with each token POS tagged or bracketed
-	\p We wanted to know how paragraph structure, etc.\ informed parsing
-	\p The source text before tokenisation is available
-	\p[$\Rightarrow$] \hl{alignment hell} due to typos corrected/inserted, reorderings, missed text, etc.
-	\vfill
-	\p Hindsight: delivering annotations on tokenised text is a bad idea
-	\p It restricts what you can do with it later
-	\p NLP software should always provide stand-off markup
-	\p Or store the whitespace/non-token data as spaCy does
-	\end{itemize}
-\end{frame}
+%\begin{plain}{Have you ever tried to de-tokenise the Penn TreeBank?}
+%	\begin{itemize}
+%	\p PTB is delivered with each token POS tagged or bracketed
+%	\p We wanted to know how paragraph structure, etc.\ informed parsing
+%	\p The source text before tokenisation is available
+%	\p An easy case:
+%	\end{itemize}
+%	% XXX: had trouble using \only, so implementing it manually
+%	\begin{columns}\hspace{.05\textwidth}\begin{column}{.3\textwidth}
+%		{		\color{usydblue}
+%\verb|[ Imports/NNS ]|\\
+%\verb|were/VBD at/IN|\\
+%\verb|[ $/$ 50.38/CD billion/CD ]|\\
+%\verb|,/, up/RB|\\
+%\verb|[ 19/CD %/NN ]|\\
+%\verb|./.|}
+%\end{column}
+%%%%\begin{column}{.05\textwidth}\begin{center}to\end{center}\end{column}
+%	\begin{column}{.3\textwidth}
+%		\ex{Imports were at \$50.38 billion, up 19\%.}\\
+%		\vspace*{1em}
+%	{\small
+%	\begin{tabular}{ll}
+%		Imports & 1--7 \\
+%		were & 9--12 \\
+%		at & 14--15 \\
+%		\$ & 16--16 \\
+%		50.38 & 17--21 \\
+%	\end{tabular}
+%	}
+%\end{column}\end{columns}
+%\end{plain}
+%
+%\begin{frame}\frametitle{Have you ever tried to de-tokenise the Penn TreeBank?}
+%\newcommand\p\item
+%	\begin{itemize}
+%	\p PTB is delivered with each token POS tagged or bracketed
+%	\p We wanted to know how paragraph structure, etc.\ informed parsing
+%	\p The source text before tokenisation is available
+%	\p[$\Rightarrow$] \hl{alignment hell} due to typos corrected/inserted, reorderings, missed text, etc.
+%	\vfill
+%	\p Hindsight: delivering annotations on tokenised text is a bad idea
+%	\p It restricts what you can do with it later
+%	\p NLP software should always provide stand-off markup
+%	\p Or store the whitespace/non-token data as spaCy does
+%	\end{itemize}
+%\end{frame}
 
 \begin{plain}{Avoiding leakage in cross validation}
 % Leakage
@@ -381,7 +394,8 @@ Test data statistics \hl{leak} into preprocessing\\
 	\begin{itemize}
 			\p[Solution] De-emphasise \verb|fit_transform|.\\
 			And make sure \verb|Pipeline| works with everything;\\
-			and make sure \verb|cross_validate| works with everything.
+			and make sure \verb|cross_validate| works with everything.\\
+			And \href{https://scikit-learn.org/dev/common_pitfalls.html}{document common pitfalls}!
 	\end{itemize}
 \end{plain}
 
@@ -391,14 +405,14 @@ Test data statistics \hl{leak} into preprocessing\\
 
 {%
 \setbeamertemplate{background}{\parbox{\paperwidth}{\vspace{2mm}\raggedleft\includegraphics[height=\paperheight]{fig/unicorn-2007266_1280}}}
-%%%\begin{points}{Maintainers need feedback from scientists}
+%%%\begin{points}{Maintainers need feedback from experts and users}
 \begin{sectionslide}
 	Maintainers of large projects\\can't be experts in \emph{all} the things they maintain
 \end{sectionslide}
 %%%\end{points}
 }
 
-\begin{points}{Scientists can (and do) help us:}
+\begin{points}{Scientists and users can (and do) help us:}
 	\p make sure the implementation matches the name
 	\p make users aware of or avoid unexpected behaviour
 	\p parametrise algorithms and set defaults helpfully
